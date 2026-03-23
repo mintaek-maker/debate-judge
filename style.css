@@ -1040,8 +1040,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .char-preview .dicebear-img {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
+  image-rendering: pixelated;
 }
 
 .char-name-label {
@@ -1075,8 +1076,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .battle-char .dicebear-img {
-  width: 110px;
-  height: 110px;
+  width: 140px;
+  height: 140px;
+  image-rendering: pixelated;
 }
 
 .battle-vs {
@@ -1095,7 +1097,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 @media (max-width: 500px) {
   .character-preview-row { gap: 20px; padding: 14px; }
-  .char-preview .dicebear-img { width: 60px; height: 60px; }
+  .char-preview .dicebear-img { width: 70px; height: 70px; }
   .character-battle { gap: 16px; }
-  .battle-char .dicebear-img { width: 80px; height: 80px; }
+  .battle-char .dicebear-img { width: 100px; height: 100px; }
 }

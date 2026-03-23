@@ -32,20 +32,16 @@ function nameToColors(name) {
  */
 function buildCharacterSVG(name, gender, state) {
   const colors = nameToColors(name || 'A');
-  const outfit = colors.outfit.replace('#', '');
+  const skin = colors.skin.replace('#', '');
+  const hair = colors.hair.replace('#', '');
 
-  // 성별에 따라 seed 분리 → 다른 랜덤 특성이 선택됨
-  // open-peeps: 손·발 포함 full-body 일러스트 스타일
+  // pixel-art: 16px 픽셀 전신 캐릭터 — 머리·팔·다리 모두 표시, 귀엽고 선명함
+  // gender[]로 남녀 외형 자동 분리, 이름별 seed로 고유 캐릭터 생성
   const seed = gender === 'female'
-    ? encodeURIComponent((name || 'A') + '_여F')
-    : encodeURIComponent((name || 'A') + '_남M');
+    ? encodeURIComponent((name || 'A') + '_F')
+    : encodeURIComponent((name || 'A') + '_M');
 
-  // 여성: 긴 머리 계열 / 남성: 짧은 머리 계열
-  const hairOptions = gender === 'female'
-    ? 'hair[]=LongHair&hair[]=Bun&hair[]=Curly&hair[]=Wavy&hair[]=Straight'
-    : 'hair[]=ShortHair&hair[]=Buzzcut&hair[]=Shaved&hair[]=Mohawk&hair[]=CurlyHighTop';
-
-  const url = `https://api.dicebear.com/9.x/open-peeps/svg?seed=${seed}&${hairOptions}&clothingColor[]=${outfit}`;
+  const url = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${seed}&gender[]=${gender}&skinColor[]=${skin}&hairColor[]=${hair}`;
 
   const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
                 : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
