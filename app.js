@@ -31,28 +31,91 @@ function nameToColors(name) {
  * @returns {string} SVG HTML 문자열
  */
 function buildCharacterSVG(name, gender, state) {
-  const colors = nameToColors(name || 'A');
-  const skin = colors.skin.replace('#', '');
-  const hair = colors.hair.replace('#', '');
+  const { hair, outfit, skin } = nameToColors(name || 'A');
 
-  // pixel-art: 16px 픽셀 전신 캐릭터 — 머리·팔·다리 모두 표시, 귀엽고 선명함
-  // gender[]로 남녀 외형 자동 분리, 이름별 seed로 고유 캐릭터 생성
-  const seed = gender === 'female'
-    ? encodeURIComponent((name || 'A') + '_F')
-    : encodeURIComponent((name || 'A') + '_M');
+  // 표정 (상태별)
+  let eyes, mouth;
+  if (state === 'win') {
+    eyes = `<path d="M32 44 Q38 38 44 44" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M56 44 Q62 38 68 44" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    mouth = `<path d="M40 57 Q50 65 60 57" stroke="#e07070" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  } else if (state === 'lose') {
+    eyes = `<path d="M32 40 Q38 46 44 40" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M56 40 Q62 46 68 40" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="37" cy="54" rx="3" ry="4" fill="#a0c4ff" opacity="0.7"/>
+            <ellipse cx="63" cy="54" rx="3" ry="4" fill="#a0c4ff" opacity="0.7"/>`;
+    mouth = `<path d="M40 62 Q50 55 60 62" stroke="#e07070" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  } else {
+    eyes = `<circle cx="38" cy="42" r="7" fill="white"/>
+            <circle cx="62" cy="42" r="7" fill="white"/>
+            <circle cx="39" cy="43" r="4" fill="#222"/>
+            <circle cx="63" cy="43" r="4" fill="#222"/>
+            <circle cx="41" cy="41" r="1.8" fill="white"/>
+            <circle cx="65" cy="41" r="1.8" fill="white"/>`;
+    mouth = `<path d="M43 57 Q50 63 57 57" stroke="#e07070" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  }
+  const blush = `<circle cx="26" cy="51" r="7" fill="rgba(255,140,140,0.38)"/>
+                 <circle cx="74" cy="51" r="7" fill="rgba(255,140,140,0.38)"/>`;
 
-  const url = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${seed}&gender[]=${gender}&skinColor[]=${skin}&hairColor[]=${hair}`;
+  let hairBack = '', hairFront = '', body = '';
+
+  if (gender === 'female') {
+    // 긴 머리 — 양쪽 드리워짐
+    hairBack = `
+      <path d="M21 30 C14 60 14 90 17 115" stroke="${hair}" stroke-width="20" stroke-linecap="round" fill="none"/>
+      <path d="M79 30 C86 60 86 90 83 115" stroke="${hair}" stroke-width="20" stroke-linecap="round" fill="none"/>`;
+    // 머리 위 + 앞머리 + 리본
+    hairFront = `
+      <ellipse cx="50" cy="15" rx="32" ry="18" fill="${hair}"/>
+      <path d="M20 35 Q50 24 80 35" fill="${hair}"/>
+      <path d="M34 13 Q50 5 66 13 Q50 21 34 13" fill="${outfit}" opacity="0.9"/>
+      <circle cx="50" cy="13" r="4.5" fill="${outfit}"/>`;
+    // 원피스 + 팔 + 손 + 다리 + 신발
+    body = `
+      <rect x="38" y="76" width="24" height="20" rx="6" fill="${outfit}"/>
+      <path d="M32 95 Q28 122 50 122 Q72 122 68 95 Z" fill="${outfit}"/>
+      <rect x="14" y="76" width="26" height="11" rx="5.5" fill="${outfit}"/>
+      <rect x="60" y="76" width="26" height="11" rx="5.5" fill="${outfit}"/>
+      <circle cx="13" cy="81" r="8.5" fill="${skin}"/>
+      <circle cx="87" cy="81" r="8.5" fill="${skin}"/>
+      <rect x="38" y="118" width="10" height="24" rx="5" fill="${skin}"/>
+      <rect x="52" y="118" width="10" height="24" rx="5" fill="${skin}"/>
+      <ellipse cx="43" cy="141" rx="13" ry="7" fill="#e08888"/>
+      <ellipse cx="57" cy="141" rx="13" ry="7" fill="#e08888"/>`;
+  } else {
+    // 짧은 머리 + 옆머리
+    hairFront = `
+      <ellipse cx="50" cy="15" rx="32" ry="18" fill="${hair}"/>
+      <rect x="19" y="24" width="10" height="22" rx="5" fill="${hair}"/>
+      <rect x="71" y="24" width="10" height="22" rx="5" fill="${hair}"/>`;
+    // 셔츠 + 바지 + 팔 + 손 + 다리 + 신발
+    body = `
+      <rect x="38" y="76" width="24" height="24" rx="6" fill="${outfit}"/>
+      <rect x="14" y="76" width="26" height="11" rx="5.5" fill="${outfit}"/>
+      <rect x="60" y="76" width="26" height="11" rx="5.5" fill="${outfit}"/>
+      <circle cx="13" cy="81" r="8.5" fill="${skin}"/>
+      <circle cx="87" cy="81" r="8.5" fill="${skin}"/>
+      <rect x="38" y="97" width="24" height="16" rx="4" fill="#444"/>
+      <rect x="38" y="109" width="10" height="26" rx="5" fill="#444"/>
+      <rect x="52" y="109" width="10" height="26" rx="5" fill="#444"/>
+      <ellipse cx="43" cy="134" rx="13" ry="7" fill="#222"/>
+      <ellipse cx="57" cy="134" rx="13" ry="7" fill="#222"/>`;
+  }
+
+  const svg = `<svg class="char-svg" viewBox="0 0 100 155" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;width:100%;height:100%">
+    ${hairBack}
+    ${body}
+    <circle cx="50" cy="44" r="32" fill="${skin}"/>
+    ${eyes}${blush}${mouth}
+    ${hairFront}
+  </svg>`;
 
   const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
                 : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
                 : state === 'draw' ? `<div class="char-overlay draw-overlay">🤝</div>`
                 : '';
 
-  // open-peeps는 기본 투명 배경 → img 태그 그대로 사용, 배경 없이 캐릭터만 표시됨
-  return `<div class="dicebear-wrap">
-    <img src="${url}" alt="${name}" class="dicebear-img"/>
-    ${overlay}
-  </div>`;
+  return `<div class="dicebear-wrap">${svg}${overlay}</div>`;
 }
 
 /**
