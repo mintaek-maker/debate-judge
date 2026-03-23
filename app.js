@@ -34,7 +34,7 @@ function buildCharacterSVG(name, gender, state) {
   // DiceBear notionists API 사용 — 이름+성별로 고유한 귀여운 캐릭터 생성
   const seed = encodeURIComponent((name || 'A') + (gender === 'female' ? '_여' : '_남'));
   const genderParam = gender === 'female' ? 'female' : 'male';
-  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&gender[]=${genderParam}`;
+  const url = `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&gender[]=${genderParam}`;
 
   const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
                 : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
