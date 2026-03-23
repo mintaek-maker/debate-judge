@@ -40,10 +40,10 @@ function buildCharacterSVG(name, gender, state) {
     ? encodeURIComponent((name || 'A') + '_여F')
     : encodeURIComponent((name || 'A') + '_남M');
 
-  // 여성: 긴 머리 계열로 제한 / 남성: 짧은 머리 계열로 제한
+  // 여성: 긴 머리 계열 / 남성: 짧은 머리 계열
   const hairOptions = gender === 'female'
-    ? 'hair[]=long&hair[]=bun&hair[]=curly'
-    : 'hair[]=short01&hair[]=short02&hair[]=shaved';
+    ? 'hair[]=LongHair&hair[]=Bun&hair[]=Curly&hair[]=Wavy&hair[]=Straight'
+    : 'hair[]=ShortHair&hair[]=Buzzcut&hair[]=Shaved&hair[]=Mohawk&hair[]=CurlyHighTop';
 
   const url = `https://api.dicebear.com/9.x/open-peeps/svg?seed=${seed}&${hairOptions}&clothingColor[]=${outfit}`;
 
