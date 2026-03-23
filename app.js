@@ -31,10 +31,21 @@ function nameToColors(name) {
  * @returns {string} SVG HTML 문자열
  */
 function buildCharacterSVG(name, gender, state) {
-  // DiceBear notionists API 사용 — 이름+성별로 고유한 귀여운 캐릭터 생성
-  const seed = encodeURIComponent((name || 'A') + (gender === 'female' ? '_여' : '_남'));
-  const genderParam = gender === 'female' ? 'female' : 'male';
-  const url = `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&gender[]=${genderParam}`;
+  const colors = nameToColors(name || 'A');
+  const outfit = colors.outfit.replace('#', '');
+
+  // 성별에 따라 seed 분리 → 다른 랜덤 특성이 선택됨
+  // open-peeps: 손·발 포함 full-body 일러스트 스타일
+  const seed = gender === 'female'
+    ? encodeURIComponent((name || 'A') + '_여F')
+    : encodeURIComponent((name || 'A') + '_남M');
+
+  // 여성: 긴 머리 계열로 제한 / 남성: 짧은 머리 계열로 제한
+  const hairOptions = gender === 'female'
+    ? 'hair[]=long&hair[]=bun&hair[]=curly'
+    : 'hair[]=short01&hair[]=short02&hair[]=shaved';
+
+  const url = `https://api.dicebear.com/9.x/open-peeps/svg?seed=${seed}&${hairOptions}&clothingColor[]=${outfit}`;
 
   const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
                 : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
