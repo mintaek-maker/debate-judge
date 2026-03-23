@@ -2,176 +2,7 @@
    논쟁 심판 - app.js (localStorage 버전)
    =================================================== */
 
-// ===== SVG 캐릭터 시스템 =====
 
-/**
- * 이름을 해시해서 캐릭터 색상 결정
- * @param {string} name
- * @returns {{ hair: string, outfit: string, skin: string }}
- */
-function nameToColors(name) {
-  let hash = 0;
-  for (let c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
-  const hairColors = ['#2D1B00','#8B4513','#FFD700','#1C1C1C','#E8A0BF','#C0392B','#2980B9'];
-  const outfitColors = ['#6C63FF','#FF6B6B','#45B7D1','#06D6A0','#FFD166','#E67E22','#E91E63'];
-  const skinTones = ['#FDBCB4','#EAA87A','#C68642','#8D5524'];
-  const h = Math.abs(hash);
-  return {
-    hair: hairColors[h % hairColors.length],
-    outfit: outfitColors[(h >> 3) % outfitColors.length],
-    skin: skinTones[(h >> 6) % skinTones.length],
-  };
-}
-
-/**
- * SVG 캐릭터 문자열 생성
- * @param {string} name - 캐릭터 이름 (색상 결정에 사용)
- * @param {'male'|'female'} gender - 성별
- * @param {'idle'|'win'|'lose'|'draw'} state - 상태
- * @returns {string} SVG HTML 문자열
- */
-function buildCharacterSVG(name, gender, state) {
-  const { hair, outfit, skin } = nameToColors(name || 'A');
-
-  // 표정 (상태별)
-  let eyes, mouth, extras = '';
-  const lashF = gender === 'female'
-    ? `<path d="M30 35 Q33 30 36 34" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-       <path d="M38 33 Q38 27 40 33" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-       <path d="M44 34 Q47 29 49 34" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-       <path d="M52 33 Q55 27 56 33" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-       <path d="M60 34 Q63 29 65 34" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-       <path d="M66 35 Q69 30 71 35" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>` : '';
-
-  if (state === 'win') {
-    eyes = `<path d="M30 43 Q38 35 46 43" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <path d="M54 43 Q62 35 70 43" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
-            ${lashF}`;
-    mouth = `<path d="M38 58 Q50 68 62 58" stroke="#e07070" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
-  } else if (state === 'lose') {
-    eyes = `<path d="M30 38 Q38 46 46 38" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <path d="M54 38 Q62 46 70 38" stroke="#333" stroke-width="3" fill="none" stroke-linecap="round"/>
-            ${lashF}
-            <ellipse cx="36" cy="54" rx="3.5" ry="5" fill="#b8d8ff" opacity="0.85"/>
-            <ellipse cx="64" cy="54" rx="3.5" ry="5" fill="#b8d8ff" opacity="0.85"/>`;
-    mouth = `<path d="M38 63 Q50 55 62 63" stroke="#e07070" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
-  } else {
-    eyes = `<circle cx="38" cy="42" r="8.5" fill="white"/>
-            <circle cx="62" cy="42" r="8.5" fill="white"/>
-            <circle cx="38" cy="43" r="5" fill="#222"/>
-            <circle cx="62" cy="43" r="5" fill="#222"/>
-            <circle cx="40" cy="40" r="2" fill="white"/>
-            <circle cx="64" cy="40" r="2" fill="white"/>
-            ${lashF}`;
-    mouth = `<path d="M42 57 Q50 64 58 57" stroke="#e07070" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
-  }
-  const blush = `<circle cx="25" cy="52" r="8" fill="rgba(255,130,130,0.42)"/>
-                 <circle cx="75" cy="52" r="8" fill="rgba(255,130,130,0.42)"/>`;
-
-  let hairBack = '', hairFront = '', body = '';
-
-  if (gender === 'female') {
-    hairBack = `
-      <path d="M20 28 C12 60 13 92 16 118" stroke="${hair}" stroke-width="22" stroke-linecap="round" fill="none"/>
-      <path d="M80 28 C88 60 87 92 84 118" stroke="${hair}" stroke-width="22" stroke-linecap="round" fill="none"/>`;
-    hairFront = `
-      <ellipse cx="50" cy="13" rx="34" ry="20" fill="${hair}"/>
-      <ellipse cx="50" cy="15" rx="34" ry="10" fill="${hair}"/>
-      <path d="M17 36 Q50 22 83 36" fill="${hair}"/>
-      <path d="M32 11 Q50 2 68 11 Q50 20 32 11" fill="${outfit}" opacity="0.92"/>
-      <circle cx="50" cy="11" r="5" fill="${outfit}"/>
-      <circle cx="41" cy="9" r="2.5" fill="${outfit}" opacity="0.7"/>
-      <circle cx="59" cy="9" r="2.5" fill="${outfit}" opacity="0.7"/>`;
-    body = `
-      <rect x="37" y="78" width="26" height="18" rx="8" fill="${outfit}"/>
-      <path d="M30 94 Q26 124 50 124 Q74 124 70 94 Z" fill="${outfit}"/>
-      <ellipse cx="50" cy="94" rx="12" ry="4" fill="${outfit}" opacity="0.6"/>
-      <rect x="12" y="78" width="27" height="12" rx="6" fill="${outfit}"/>
-      <rect x="61" y="78" width="27" height="12" rx="6" fill="${outfit}"/>
-      <circle cx="11" cy="84" r="9" fill="${skin}"/>
-      <circle cx="89" cy="84" r="9" fill="${skin}"/>
-      <rect x="38" y="120" width="11" height="22" rx="5.5" fill="${skin}"/>
-      <rect x="51" y="120" width="11" height="22" rx="5.5" fill="${skin}"/>
-      <ellipse cx="44" cy="141" rx="13" ry="7" fill="#e87f7f"/>
-      <ellipse cx="56" cy="141" rx="13" ry="7" fill="#e87f7f"/>`;
-  } else {
-    hairFront = `
-      <ellipse cx="50" cy="13" rx="34" ry="20" fill="${hair}"/>
-      <rect x="18" y="22" width="11" height="24" rx="5.5" fill="${hair}"/>
-      <rect x="71" y="22" width="11" height="24" rx="5.5" fill="${hair}"/>
-      <path d="M30 15 Q50 8 70 15" stroke="${hair}" stroke-width="8" stroke-linecap="round" fill="none"/>`;
-    body = `
-      <rect x="37" y="78" width="26" height="24" rx="8" fill="${outfit}"/>
-      <rect x="12" y="78" width="27" height="12" rx="6" fill="${outfit}"/>
-      <rect x="61" y="78" width="27" height="12" rx="6" fill="${outfit}"/>
-      <circle cx="11" cy="84" r="9" fill="${skin}"/>
-      <circle cx="89" cy="84" r="9" fill="${skin}"/>
-      <rect x="37" y="99" width="26" height="15" rx="5" fill="#3a3a5c"/>
-      <rect x="37" y="110" width="11" height="24" rx="5.5" fill="#3a3a5c"/>
-      <rect x="52" y="110" width="11" height="24" rx="5.5" fill="#3a3a5c"/>
-      <ellipse cx="43" cy="133" rx="13" ry="7" fill="#222"/>
-      <ellipse cx="57" cy="133" rx="13" ry="7" fill="#222"/>`;
-  }
-
-  const svg = `<svg class="char-svg" viewBox="0 0 100 152" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;width:100%;height:100%">
-    ${hairBack}
-    ${body}
-    <circle cx="50" cy="44" r="33" fill="${skin}"/>
-    ${eyes}${blush}${mouth}
-    ${hairFront}
-  </svg>`;
-
-  const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
-                : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
-                : state === 'draw' ? `<div class="char-overlay draw-overlay">🤝</div>`
-                : '';
-
-  return `<div class="dicebear-wrap">${svg}${overlay}</div>`;
-}
-
-/**
- * 헥스 색상을 밝게/어둡게 조절
- * @param {string} hex - #RRGGBB 형식
- * @param {number} amount - 양수면 밝게, 음수면 어둡게
- * @returns {string}
- */
-function shadeColor(hex, amount) {
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
-  r = Math.max(0, Math.min(255, r + amount));
-  g = Math.max(0, Math.min(255, g + amount));
-  b = Math.max(0, Math.min(255, b + amount));
-  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * 캐릭터 프리뷰 업데이트 (이름 입력 실시간 반영)
- */
-function updateCharacterPreviews() {
-  const nameA = dom.nameA.value.trim() || 'A';
-  const nameB = dom.nameB.value.trim() || 'B';
-  const isCouple = state.relationType === 'couple';
-  const genderA = 'male';
-  const genderB = isCouple ? 'female' : 'male';
-
-  const previewA = document.getElementById('charPreviewA');
-  const previewB = document.getElementById('charPreviewB');
-
-  function updatePreview(el, name, gender) {
-    if (!el) return;
-    const old = el.querySelector('.dicebear-wrap');
-    const label = el.querySelector('.char-name-label');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = buildCharacterSVG(name, gender, 'idle');
-    if (old) el.replaceChild(tmp.firstElementChild, old);
-    else el.insertBefore(tmp.firstElementChild, label);
-    if (label) label.textContent = name.length > 6 ? name.slice(0, 6) + '…' : name;
-  }
-
-  updatePreview(previewA, nameA, genderA);
-  updatePreview(previewB, nameB, genderB);
-}
 
 // ===== 심각도 설정 =====
 const SEVERITY_INFO = {
@@ -248,7 +79,6 @@ dom.relationBtns.forEach((btn) => {
     dom.relationBtns.forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     state.relationType = btn.dataset.value;
-    updateCharacterPreviews();
   });
 });
 
@@ -265,12 +95,6 @@ function updateSeverityUI() {
 
 updateSeverityUI();
 
-// ===== 캐릭터 프리뷰 이벤트 =====
-dom.nameA.addEventListener('input', updateCharacterPreviews);
-dom.nameB.addEventListener('input', updateCharacterPreviews);
-
-// 초기 프리뷰 렌더링 (DOM 준비 후)
-setTimeout(updateCharacterPreviews, 0);
 
 // ===== 폼 제출 =====
 dom.submitBtn.addEventListener('click', handleSubmit);
@@ -432,36 +256,12 @@ function renderVerdictCard(data, container, prepend = false) {
   const severityBadge = data.severity_badge || SEVERITY_INFO[data.severity || 3].badge;
   const isLiked = data.id && state.likedIds.has(data.id);
 
-  // 캐릭터 배틀 섹션 구성
-  const isCouple = data.relation_type === 'couple';
-  const genderA = 'male';
-  const genderB = isCouple ? 'female' : 'male';
-  const stateA = data.winner === 'A' ? 'win' : data.winner === '무승부' ? 'draw' : 'lose';
-  const stateB = data.winner === 'B' ? 'win' : data.winner === '무승부' ? 'draw' : 'lose';
-  const charClassA = stateA === 'win' ? 'char-win' : stateA === 'lose' ? 'char-lose' : 'char-draw';
-  const charClassB = stateB === 'win' ? 'char-win' : stateB === 'lose' ? 'char-lose' : 'char-draw';
-  const svgA = buildCharacterSVG(data.person_a || 'A', genderA, stateA);
-  const svgB = buildCharacterSVG(data.person_b || 'B', genderB, stateB);
-
-  const characterBattle = `
-    <div class="character-battle">
-      <div class="battle-char char-a ${charClassA}">
-        ${svgA}
-        <div class="battle-name">${escapeHtml(data.person_a)}</div>
-      </div>
-      <div class="battle-vs">⚖️</div>
-      <div class="battle-char char-b ${charClassB}">
-        ${svgB}
-        <div class="battle-name">${escapeHtml(data.person_b)}</div>
-      </div>
-    </div>`;
 
   const card = document.createElement('div');
   card.className = `card verdict-card ${winnerClass}`;
   if (data.id) card.dataset.id = data.id;
 
   card.innerHTML = `
-    ${characterBattle}
     <div class="verdict-header">
       <div class="verdict-badges">
         <span class="badge badge-tag">${escapeHtml(data.tag || '#논쟁')}</span>
