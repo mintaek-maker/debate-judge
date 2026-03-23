@@ -2,6 +2,95 @@
    논쟁 심판 - app.js (localStorage 버전)
    =================================================== */
 
+// ===== SVG 캐릭터 시스템 =====
+
+/**
+ * 이름을 해시해서 캐릭터 색상 결정
+ * @param {string} name
+ * @returns {{ hair: string, outfit: string, skin: string }}
+ */
+function nameToColors(name) {
+  let hash = 0;
+  for (let c of name) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  const hairColors = ['#2D1B00','#8B4513','#FFD700','#1C1C1C','#E8A0BF','#C0392B','#2980B9'];
+  const outfitColors = ['#6C63FF','#FF6B6B','#45B7D1','#06D6A0','#FFD166','#E67E22','#E91E63'];
+  const skinTones = ['#FDBCB4','#EAA87A','#C68642','#8D5524'];
+  const h = Math.abs(hash);
+  return {
+    hair: hairColors[h % hairColors.length],
+    outfit: outfitColors[(h >> 3) % outfitColors.length],
+    skin: skinTones[(h >> 6) % skinTones.length],
+  };
+}
+
+/**
+ * SVG 캐릭터 문자열 생성
+ * @param {string} name - 캐릭터 이름 (색상 결정에 사용)
+ * @param {'male'|'female'} gender - 성별
+ * @param {'idle'|'win'|'lose'|'draw'} state - 상태
+ * @returns {string} SVG HTML 문자열
+ */
+function buildCharacterSVG(name, gender, state) {
+  // DiceBear notionists API 사용 — 이름+성별로 고유한 귀여운 캐릭터 생성
+  const seed = encodeURIComponent((name || 'A') + (gender === 'female' ? '_여' : '_남'));
+  const genderParam = gender === 'female' ? 'female' : 'male';
+  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&gender[]=${genderParam}&backgroundColor=fff8f5,ffeaea,fff0f5`;
+
+  const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
+                : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
+                : state === 'draw' ? `<div class="char-overlay draw-overlay">🤝</div>`
+                : '';
+
+  return `<div class="dicebear-wrap">
+    <img src="${url}" alt="${name}" class="dicebear-img" loading="lazy"/>
+    ${overlay}
+  </div>`;
+}
+
+/**
+ * 헥스 색상을 밝게/어둡게 조절
+ * @param {string} hex - #RRGGBB 형식
+ * @param {number} amount - 양수면 밝게, 음수면 어둡게
+ * @returns {string}
+ */
+function shadeColor(hex, amount) {
+  let r = parseInt(hex.slice(1, 3), 16);
+  let g = parseInt(hex.slice(3, 5), 16);
+  let b = parseInt(hex.slice(5, 7), 16);
+  r = Math.max(0, Math.min(255, r + amount));
+  g = Math.max(0, Math.min(255, g + amount));
+  b = Math.max(0, Math.min(255, b + amount));
+  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * 캐릭터 프리뷰 업데이트 (이름 입력 실시간 반영)
+ */
+function updateCharacterPreviews() {
+  const nameA = dom.nameA.value.trim() || 'A';
+  const nameB = dom.nameB.value.trim() || 'B';
+  const isCouple = state.relationType === 'couple';
+  const genderA = 'male';
+  const genderB = isCouple ? 'female' : 'male';
+
+  const previewA = document.getElementById('charPreviewA');
+  const previewB = document.getElementById('charPreviewB');
+
+  function updatePreview(el, name, gender) {
+    if (!el) return;
+    const old = el.querySelector('.dicebear-wrap');
+    const label = el.querySelector('.char-name-label');
+    const tmp = document.createElement('div');
+    tmp.innerHTML = buildCharacterSVG(name, gender, 'idle');
+    if (old) el.replaceChild(tmp.firstElementChild, old);
+    else el.insertBefore(tmp.firstElementChild, label);
+    if (label) label.textContent = name.length > 6 ? name.slice(0, 6) + '…' : name;
+  }
+
+  updatePreview(previewA, nameA, genderA);
+  updatePreview(previewB, nameB, genderB);
+}
+
 // ===== 심각도 설정 =====
 const SEVERITY_INFO = {
   1: { emoji: '😂', label: '드립', badge: '😂 드립' },
@@ -77,6 +166,7 @@ dom.relationBtns.forEach((btn) => {
     dom.relationBtns.forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     state.relationType = btn.dataset.value;
+    updateCharacterPreviews();
   });
 });
 
@@ -92,6 +182,13 @@ function updateSeverityUI() {
 }
 
 updateSeverityUI();
+
+// ===== 캐릭터 프리뷰 이벤트 =====
+dom.nameA.addEventListener('input', updateCharacterPreviews);
+dom.nameB.addEventListener('input', updateCharacterPreviews);
+
+// 초기 프리뷰 렌더링 (DOM 준비 후)
+setTimeout(updateCharacterPreviews, 0);
 
 // ===== 폼 제출 =====
 dom.submitBtn.addEventListener('click', handleSubmit);
@@ -253,11 +350,36 @@ function renderVerdictCard(data, container, prepend = false) {
   const severityBadge = data.severity_badge || SEVERITY_INFO[data.severity || 3].badge;
   const isLiked = data.id && state.likedIds.has(data.id);
 
+  // 캐릭터 배틀 섹션 구성
+  const isCouple = data.relation_type === 'couple';
+  const genderA = 'male';
+  const genderB = isCouple ? 'female' : 'male';
+  const stateA = data.winner === 'A' ? 'win' : data.winner === '무승부' ? 'draw' : 'lose';
+  const stateB = data.winner === 'B' ? 'win' : data.winner === '무승부' ? 'draw' : 'lose';
+  const charClassA = stateA === 'win' ? 'char-win' : stateA === 'lose' ? 'char-lose' : 'char-draw';
+  const charClassB = stateB === 'win' ? 'char-win' : stateB === 'lose' ? 'char-lose' : 'char-draw';
+  const svgA = buildCharacterSVG(data.person_a || 'A', genderA, stateA);
+  const svgB = buildCharacterSVG(data.person_b || 'B', genderB, stateB);
+
+  const characterBattle = `
+    <div class="character-battle">
+      <div class="battle-char char-a ${charClassA}">
+        ${svgA}
+        <div class="battle-name">${escapeHtml(data.person_a)}</div>
+      </div>
+      <div class="battle-vs">⚖️</div>
+      <div class="battle-char char-b ${charClassB}">
+        ${svgB}
+        <div class="battle-name">${escapeHtml(data.person_b)}</div>
+      </div>
+    </div>`;
+
   const card = document.createElement('div');
   card.className = `card verdict-card ${winnerClass}`;
   if (data.id) card.dataset.id = data.id;
 
   card.innerHTML = `
+    ${characterBattle}
     <div class="verdict-header">
       <div class="verdict-badges">
         <span class="badge badge-tag">${escapeHtml(data.tag || '#논쟁')}</span>

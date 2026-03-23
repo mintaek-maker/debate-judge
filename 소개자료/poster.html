@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>논쟁 심판 — 소개자료</title>
+  <script src="lib/html2canvas.min.js"></script>
+  <script src="lib/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #FFF8F5;
+      --coral: #FF6B6B;
+      --coral-light: #FFE8E8;
+      --purple: #6C63FF;
+      --pink: #FF6584;
+      --text: #2D2D2D;
+      --text-sub: #888;
+      --white: #FFFFFF;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #1a1a1a;
+      font-family: 'Noto Sans KR', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewer {
+      width: 100vw; height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .poster-container {
+      width: 1920px; height: 1080px;
+      transform-origin: 0 0;
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 8px;
+      box-shadow: 0 32px 100px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    /* ===== 슬라이드 공통 ===== */
+    .slide {
+      width: 1920px; height: 1080px;
+      background: var(--bg);
+      position: absolute; top: 0; left: 0;
+      display: none;
+      padding: 80px 120px;
+    }
+    .slide.active { display: flex; flex-direction: column; }
+
+    .slide-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--coral);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .slide-title {
+      font-size: 72px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 48px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      padding: 40px;
+    }
+
+    /* ===== 슬라이드 1 — 타이틀 ===== */
+    #slide1 {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(145deg, #FFF8F5 0%, #FFE8E8 100%);
+    }
+
+    #slide1 .emoji { font-size: 140px; margin-bottom: 32px; display: block; }
+    #slide1 h1 {
+      font-size: 120px;
+      font-weight: 900;
+      color: var(--coral);
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+    #slide1 .subtitle {
+      font-size: 36px;
+      font-weight: 500;
+      color: var(--text-sub);
+      margin-bottom: 60px;
+    }
+    #slide1 .bottom-row {
+      display: flex; align-items: center; gap: 32px;
+    }
+    #slide1 .badge {
+      background: var(--white);
+      border-radius: 40px;
+      padding: 14px 32px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-sub);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    #slide1 .url-badge {
+      background: var(--coral);
+      color: var(--white);
+      border-radius: 40px;
+      padding: 14px 32px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    /* ===== 슬라이드 2 — 기획 의도 ===== */
+    #slide2 { justify-content: center; }
+    #slide2 .content { display: flex; gap: 60px; align-items: flex-start; flex: 1; }
+    #slide2 .left { flex: 1; }
+    #slide2 .right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+    .problem-box {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 48px;
+      border-left: 8px solid var(--coral);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.06);
+      margin-bottom: 32px;
+    }
+    .problem-box .quote {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+    .problem-box .desc {
+      font-size: 24px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .point-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 28px 36px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .point-card .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--coral);
+      flex-shrink: 0;
+    }
+    .point-card .text {
+      font-size: 24px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .solution-box {
+      background: linear-gradient(135deg, var(--coral), var(--pink));
+      border-radius: 24px;
+      padding: 40px 48px;
+      color: var(--white);
+    }
+    .solution-box .label {
+      font-size: 18px;
+      font-weight: 700;
+      opacity: 0.8;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .solution-box .text {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    /* ===== 슬라이드 3 — 차별점 ===== */
+    #slide3 { justify-content: center; }
+    #slide3 .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 28px;
+      flex: 1;
+    }
+    .diff-card {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .diff-card .icon { font-size: 52px; }
+    .diff-card .name {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .diff-card .desc {
+      font-size: 20px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* ===== 슬라이드 4 — Structured Output ===== */
+    #slide4 { justify-content: center; }
+    #slide4 .content { display: flex; gap: 60px; flex: 1; align-items: center; }
+    #slide4 .left { flex: 1; display: flex; flex-direction: column; gap: 28px; }
+    #slide4 .right { flex: 1.1; }
+
+    .so-desc {
+      font-size: 28px;
+      color: var(--text);
+      line-height: 1.7;
+      font-weight: 500;
+    }
+
+    .code-box {
+      background: #1E1E2E;
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .code-box pre {
+      font-family: 'Courier New', monospace;
+      font-size: 22px;
+      line-height: 1.8;
+      color: #CDD6F4;
+    }
+    .code-box .key { color: #89DCEB; }
+    .code-box .str { color: #A6E3A1; }
+    .code-box .num { color: #FAB387; }
+
+    .so-effect {
+      background: linear-gradient(135deg, #6C63FF22, #6C63FF11);
+      border: 2px solid var(--purple);
+      border-radius: 20px;
+      padding: 28px 36px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .so-effect .icon { font-size: 36px; }
+    .so-effect .text { font-size: 24px; color: var(--purple); font-weight: 700; line-height: 1.4; }
+
+    /* ===== 슬라이드 5 — 주요 기능 ===== */
+    #slide5 { justify-content: center; }
+    #slide5 .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 24px;
+      flex: 1;
+    }
+    .func-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .func-card .icon { font-size: 40px; }
+    .func-card .name {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .func-card .desc {
+      font-size: 19px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* ===== 슬라이드 6 — 기술 스택 ===== */
+    #slide6 { justify-content: center; }
+    #slide6 .content {
+      display: flex; gap: 40px; flex: 1; align-items: stretch;
+    }
+    .stack-card {
+      flex: 1;
+      background: var(--white);
+      border-radius: 28px;
+      padding: 52px 48px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .stack-card .stack-icon { font-size: 56px; }
+    .stack-card .stack-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--coral);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .stack-card .stack-title {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .stack-card .stack-desc {
+      font-size: 22px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      margin-top: auto;
+    }
+    .stack-card .tag {
+      display: inline-block;
+      background: var(--coral-light);
+      color: var(--coral);
+      border-radius: 12px;
+      padding: 6px 18px;
+      font-size: 18px;
+      font-weight: 700;
+      width: fit-content;
+    }
+
+    #slide6 .url-banner {
+      background: linear-gradient(135deg, var(--coral), var(--pink));
+      border-radius: 28px;
+      padding: 40px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 36px;
+      box-shadow: 0 8px 40px rgba(255,107,107,0.3);
+    }
+    #slide6 .url-banner .label {
+      font-size: 24px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+    }
+    #slide6 .url-banner .url {
+      font-size: 40px;
+      font-weight: 900;
+      color: white;
+    }
+
+    /* ===== 슬라이드 번호 ===== */
+    .slide-num {
+      position: absolute;
+      bottom: 40px; right: 60px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+
+    /* ===== 컨트롤 ===== */
+    .controls {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(20,20,20,0.85);
+      backdrop-filter: blur(12px);
+      padding: 8px 20px;
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.08);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .viewer:hover .controls { opacity: 1; }
+    .controls button {
+      background: none; border: none;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer; font-size: 16px;
+      padding: 6px 12px; border-radius: 6px;
+      transition: all 0.2s;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .controls button:hover { color: #fff; background: rgba(255,255,255,0.1); }
+    .controls .slide-counter { color: rgba(255,255,255,0.5); font-size: 13px; min-width: 50px; text-align: center; }
+    .controls .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.12); }
+
+    .export-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 10000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .export-overlay.active { opacity: 1; pointer-events: auto; }
+    .export-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #FF6B6B;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .export-status { color: rgba(255,255,255,0.6); font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="viewer">
+  <div class="poster-container" id="posterContainer">
+
+    <!-- ===== 슬라이드 1 — 타이틀 ===== -->
+    <div class="slide active" id="slide1">
+      <span class="emoji">⚖️</span>
+      <h1>논쟁 심판</h1>
+      <p class="subtitle">AI가 판정해주는 커플·친구 논쟁 심판 앱</p>
+      <div class="bottom-row">
+        <span class="badge">CREAIIT 2026 SESSION ASSIGNMENT</span>
+        <span class="url-badge">🔗 debate-judge.vercel.app</span>
+      </div>
+      <div class="slide-num">1 / 6</div>
+    </div>
+
+    <!-- ===== 슬라이드 2 — 기획 의도 ===== -->
+    <div class="slide" id="slide2">
+      <div class="slide-label">기획 의도</div>
+      <div class="slide-title">왜 만들었나요?</div>
+      <div class="content">
+        <div class="left">
+          <div class="problem-box">
+            <div class="quote">"내가 맞지 않아?"</div>
+            <div class="desc">커플·친구 사이 논쟁,<br>끝나지 않는 이유가 있습니다.</div>
+          </div>
+          <div class="solution-box">
+            <div class="label">💡 해결</div>
+            <div class="text">AI가 공정한 판사로<br>논리적·유머러스하게 판결해드립니다</div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="point-card">
+            <div class="dot"></div>
+            <div class="text">서로 자기가 맞다고 생각 → 평행선 대화</div>
+          </div>
+          <div class="point-card">
+            <div class="dot"></div>
+            <div class="text">감정이 섞이면 논리보다 감정이 앞섬</div>
+          </div>
+          <div class="point-card">
+            <div class="dot"></div>
+            <div class="text">공정한 제3자가 없다</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">2 / 6</div>
+    </div>
+
+    <!-- ===== 슬라이드 3 — 차별점 ===== -->
+    <div class="slide" id="slide3">
+      <div class="slide-label">차별점</div>
+      <div class="slide-title">이런 점이 다릅니다</div>
+      <div class="grid">
+        <div class="diff-card">
+          <div class="icon">🎚️</div>
+          <div class="name">심각도 슬라이더</div>
+          <div class="desc">드립부터 진지까지<br>5단계로 판사 톤 조절</div>
+        </div>
+        <div class="diff-card">
+          <div class="icon">💑</div>
+          <div class="name">관계 맞춤 판결</div>
+          <div class="desc">커플 / 친구 관계에 따라<br>판결 톤이 달라짐</div>
+        </div>
+        <div class="diff-card">
+          <div class="icon">😤</div>
+          <div class="name">억울해요 재심</div>
+          <div class="desc">패배한 쪽이<br>추가 변론 → 역전 가능</div>
+        </div>
+        <div class="diff-card">
+          <div class="icon">❤️</div>
+          <div class="name">공감 피드</div>
+          <div class="desc">역대 판정을<br>하트 순으로 정렬</div>
+        </div>
+        <div class="diff-card">
+          <div class="icon">📋</div>
+          <div class="name">판결문 공유</div>
+          <div class="desc">카톡으로<br>"내가 이겼잖아" 공유</div>
+        </div>
+      </div>
+      <div class="slide-num">3 / 6</div>
+    </div>
+
+    <!-- ===== 슬라이드 4 — Structured Output ===== -->
+    <div class="slide" id="slide4">
+      <div class="slide-label">Structured Output</div>
+      <div class="slide-title">구조화된 판결</div>
+      <div class="content">
+        <div class="left">
+          <p class="so-desc">JSON Schema를 정의해<br>LLM이 항상 일정한 형태의<br>판결을 반환하도록 강제합니다.</p>
+          <div style="margin-top: 32px;">
+            <div class="so-effect">
+              <span class="icon">✅</span>
+              <span class="text">구조화된 응답으로<br>카드 UI 자동 렌더링 가능</span>
+            </div>
+          </div>
+          <div style="margin-top: 20px;">
+            <div class="so-effect" style="border-color: var(--pink); background: linear-gradient(135deg, #FF658422, #FF658411);">
+              <span class="icon">🎯</span>
+              <span class="text" style="color: var(--pink);">심각도에 따라 판사 톤이<br>자동으로 달라집니다</span>
+            </div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="code-box">
+            <pre>{
+  <span class="key">"case_title"</span>: <span class="str">"치킨 vs 피자 분쟁"</span>,
+  <span class="key">"winner"</span>: <span class="str">"A"</span>,
+  <span class="key">"score_a"</span>: <span class="num">72</span>,
+  <span class="key">"score_b"</span>: <span class="num">28</span>,
+  <span class="key">"judge_comment"</span>: <span class="str">"판사 한마디"</span>,
+  <span class="key">"verdict_reason"</span>: <span class="str">"판결 이유"</span>,
+  <span class="key">"tag"</span>: <span class="str">"#음식"</span>,
+  <span class="key">"reconciliation_tip"</span>: <span class="str">"화해 미션"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="slide-num">4 / 6</div>
+    </div>
+
+    <!-- ===== 슬라이드 5 — 주요 기능 ===== -->
+    <div class="slide" id="slide5">
+      <div class="slide-label">기능</div>
+      <div class="slide-title">주요 기능</div>
+      <div class="grid">
+        <div class="func-card">
+          <div class="icon">⚖️</div>
+          <div class="name">AI 판정</div>
+          <div class="desc">OpenRouter + GPT-4o-mini로 공정한 판결</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">🎚️</div>
+          <div class="name">심각도 5단계</div>
+          <div class="desc">😂 드립 ↔ 🔥 격한, 판사 톤 자동 조절</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">🏛️</div>
+          <div class="name">역대 판정 피드</div>
+          <div class="desc">하트 순으로 정렬된 판정 기록</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">🏷️</div>
+          <div class="name">태그 필터</div>
+          <div class="desc">#음식 #약속 등 주제별 분류</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">💑</div>
+          <div class="name">관계 탭</div>
+          <div class="desc">커플 / 친구 피드 분리</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">😤</div>
+          <div class="name">재심 기능</div>
+          <div class="desc">추가 변론으로 역전 도전</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">📋</div>
+          <div class="name">판결문 복사</div>
+          <div class="desc">카톡 공유용 텍스트 복사</div>
+        </div>
+        <div class="func-card">
+          <div class="icon">💾</div>
+          <div class="name">이미지 저장</div>
+          <div class="desc">판결 카드를 PNG로 저장</div>
+        </div>
+      </div>
+      <div class="slide-num">5 / 6</div>
+    </div>
+
+    <!-- ===== 슬라이드 6 — 기술 스택 ===== -->
+    <div class="slide" id="slide6">
+      <div class="slide-label">기술 스택 & 배포</div>
+      <div class="slide-title">어떻게 만들었나요?</div>
+      <div class="content">
+        <div class="stack-card">
+          <div class="stack-icon">🌐</div>
+          <div class="stack-label">Frontend</div>
+          <div class="stack-title">Vanilla HTML / CSS / JavaScript</div>
+          <div class="stack-desc">프레임워크 없이 순수 웹 기술로 구현</div>
+          <span class="tag">Single Page App</span>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🤖</div>
+          <div class="stack-label">LLM API</div>
+          <div class="stack-title">OpenRouter<br>GPT-4o-mini</div>
+          <div class="stack-desc">Structured Output으로 JSON 스키마 강제</div>
+          <span class="tag">Structured Output</span>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🚀</div>
+          <div class="stack-label">배포</div>
+          <div class="stack-title">Vercel +<br>Serverless Function</div>
+          <div class="stack-desc">API 키를 환경변수로 보호, GitHub 자동 배포</div>
+          <span class="tag">API Key 보호</span>
+        </div>
+      </div>
+      <div class="url-banner">
+        <span class="label">🔗 배포 URL</span>
+        <span class="url">debate-judge.vercel.app</span>
+      </div>
+      <div class="slide-num">6 / 6</div>
+    </div>
+
+  </div><!-- /poster-container -->
+
+  <!-- 컨트롤 -->
+  <div class="controls">
+    <button onclick="prevSlide()">← 이전</button>
+    <span class="slide-counter" id="slideCounter">1 / 6</span>
+    <button onclick="nextSlide()">다음 →</button>
+    <div class="divider"></div>
+    <button onclick="toggleFullscreen()">⛶ 전체화면</button>
+    <button onclick="exportPDF()">📄 PDF</button>
+  </div>
+</div>
+
+<div class="export-overlay" id="exportOverlay">
+  <div class="export-spinner"></div>
+  <div class="export-status" id="exportStatus">PDF 생성 중...</div>
+</div>
+
+<script>
+  const CANVAS_W = 1920, CANVAS_H = 1080;
+  const TOTAL = 6;
+  let current = 1;
+
+  function showSlide(n) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById('slide' + n).classList.add('active');
+    document.getElementById('slideCounter').textContent = n + ' / ' + TOTAL;
+  }
+
+  function nextSlide() {
+    if (current < TOTAL) { current++; showSlide(current); }
+  }
+  function prevSlide() {
+    if (current > 1) { current--; showSlide(current); }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey) { e.preventDefault(); exportPDF(); }
+  });
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+
+  function scalePoster() {
+    const container = document.getElementById('posterContainer');
+    const scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H) * 0.9;
+    const scaledW = CANVAS_W * scale;
+    const scaledH = CANVAS_H * scale;
+    container.style.transform = `translate(${-scaledW / 2}px, ${-scaledH / 2}px) scale(${scale})`;
+  }
+  window.addEventListener('resize', scalePoster);
+  scalePoster();
+
+  async function exportPDF() {
+    const overlay = document.getElementById('exportOverlay');
+    const status = document.getElementById('exportStatus');
+    overlay.classList.add('active');
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [CANVAS_W, CANVAS_H], hotfixes: ['px_scaling'] });
+      await document.fonts.ready;
+
+      for (let i = 1; i <= TOTAL; i++) {
+        status.textContent = `슬라이드 ${i}/${TOTAL} 렌더링 중...`;
+        showSlide(i);
+
+        const container = document.getElementById('posterContainer');
+        const savedStyle = container.style.cssText;
+        container.style.cssText = `width:${CANVAS_W}px;height:${CANVAS_H}px;position:fixed;top:0;left:0;transform:none;z-index:9999;border-radius:0;box-shadow:none;`;
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await new Promise(r => setTimeout(r, 150));
+
+        const canvas = await html2canvas(container, { width: CANVAS_W, height: CANVAS_H, scale: 1.5, useCORS: true, logging: false });
+        container.style.cssText = savedStyle;
+        scalePoster();
+
+        if (i > 1) pdf.addPage([CANVAS_W, CANVAS_H], 'landscape');
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, CANVAS_W, CANVAS_H);
+      }
+
+      status.textContent = 'PDF 저장 중...';
+      pdf.save('논쟁심판_소개자료.pdf');
+      showSlide(current);
+    } catch(e) {
+      alert('PDF 생성 실패: ' + e.message);
+    } finally {
+      overlay.classList.remove('active');
+    }
+  }
+</script>
+</body>
+</html>
