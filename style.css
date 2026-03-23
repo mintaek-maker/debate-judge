@@ -977,31 +977,37 @@ input[type="range"]::-webkit-slider-thumb:hover {
   100% { transform: translateY(15px); opacity: 0; }
 }
 
-.char-win .dicebear-img {
+.char-win .dicebear-svg {
   animation: charJump 0.6s ease-in-out infinite;
   transform-origin: bottom center;
+  overflow: visible;
 }
 
-.char-lose .dicebear-img {
+.char-lose .dicebear-svg {
   animation: charCry 0.5s ease-in-out forwards;
   transform-origin: bottom center;
   filter: grayscale(20%);
+  overflow: visible;
 }
 
-.char-draw .dicebear-img {
+.char-draw .dicebear-svg {
   animation: charShrug 1s ease-in-out infinite;
   transform-origin: bottom center;
+  overflow: visible;
 }
 
 .dicebear-wrap {
   position: relative;
   display: inline-block;
+  overflow: visible;
 }
 
-.dicebear-img {
+.dicebear-img,
+.dicebear-svg {
   width: 100%;
   height: auto;
   display: block;
+  overflow: visible;
 }
 
 .char-overlay {
@@ -1038,7 +1044,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   gap: 8px;
 }
 
-.char-preview .dicebear-img {
+.char-preview .dicebear-img,
+.char-preview .dicebear-svg {
   width: 80px;
   height: 80px;
 }
@@ -1073,7 +1080,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   gap: 8px;
 }
 
-.battle-char .dicebear-img {
+.battle-char .dicebear-img,
+.battle-char .dicebear-svg {
   width: 110px;
   height: 110px;
 }
@@ -1094,7 +1102,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 @media (max-width: 500px) {
   .character-preview-row { gap: 20px; padding: 14px; }
-  .char-preview svg { width: 60px; height: 100px; }
+  .char-preview .dicebear-svg, .char-preview .dicebear-img { width: 60px; height: 60px; }
   .character-battle { gap: 16px; }
-  .battle-char svg { width: 72px; height: 120px; }
+  .battle-char .dicebear-svg, .battle-char .dicebear-img { width: 80px; height: 80px; }
 }

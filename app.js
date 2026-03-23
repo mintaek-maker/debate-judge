@@ -34,17 +34,46 @@ function buildCharacterSVG(name, gender, state) {
   // DiceBear notionists API 사용 — 이름+성별로 고유한 귀여운 캐릭터 생성
   const seed = encodeURIComponent((name || 'A') + (gender === 'female' ? '_여' : '_남'));
   const genderParam = gender === 'female' ? 'female' : 'male';
-  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&gender[]=${genderParam}&backgroundColor=fff8f5,ffeaea,fff0f5`;
+  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&gender[]=${genderParam}`;
 
   const overlay = state === 'win'  ? `<div class="char-overlay win-overlay">🎉</div>`
                 : state === 'lose' ? `<div class="char-overlay lose-overlay">😭</div>`
                 : state === 'draw' ? `<div class="char-overlay draw-overlay">🤝</div>`
                 : '';
 
-  return `<div class="dicebear-wrap">
+  // data-dicebear-src 저장 → inlineDiceBearSVGs()가 나중에 img를 inline SVG로 교체
+  return `<div class="dicebear-wrap" data-dicebear-src="${url}">
     <img src="${url}" alt="${name}" class="dicebear-img" loading="lazy"/>
     ${overlay}
   </div>`;
+}
+
+/**
+ * container 안의 .dicebear-wrap[data-dicebear-src] 요소들을
+ * 실제 inline SVG로 교체 → 투명 배경이 되어 캐릭터만 애니메이션됨
+ */
+async function inlineDiceBearSVGs(container) {
+  const wraps = container.querySelectorAll('.dicebear-wrap[data-dicebear-src]');
+  await Promise.all([...wraps].map(async (wrap) => {
+    const url = wrap.dataset.dicebearSrc;
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'image/svg+xml');
+      const svg = doc.querySelector('svg');
+      if (!svg) return;
+      // 배경 rect 투명화 → 캐릭터만 보임
+      const bgRect = svg.querySelector('rect');
+      if (bgRect) bgRect.setAttribute('fill', 'transparent');
+      svg.removeAttribute('width');
+      svg.removeAttribute('height');
+      svg.classList.add('dicebear-svg');
+      const img = wrap.querySelector('.dicebear-img');
+      if (img) wrap.replaceChild(svg, img);
+      wrap.removeAttribute('data-dicebear-src');
+    } catch (_) { /* img 폴백 유지 */ }
+  }));
 }
 
 /**
@@ -85,6 +114,7 @@ function updateCharacterPreviews() {
     if (old) el.replaceChild(tmp.firstElementChild, old);
     else el.insertBefore(tmp.firstElementChild, label);
     if (label) label.textContent = name.length > 6 ? name.slice(0, 6) + '…' : name;
+    inlineDiceBearSVGs(el); // 비동기 — img → inline SVG 교체
   }
 
   updatePreview(previewA, nameA, genderA);
@@ -463,6 +493,9 @@ function renderVerdictCard(data, container, prepend = false) {
   } else {
     container.appendChild(card);
   }
+
+  // img → inline SVG 교체 (투명 배경으로 캐릭터만 애니메이션)
+  inlineDiceBearSVGs(card);
 }
 
 // ===== 하트 처리 (localStorage) =====
